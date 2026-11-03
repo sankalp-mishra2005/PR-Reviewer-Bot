@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+private-key.pem
+reviews.db
+*.db
+
+# Private notes & interview prep (do not push to GitHub)
+pr-reviewer-build-guide.md
+pr-reviewer-phase3-complete.md
+pr-reviewer-interview-mastery.md
+pr-reviewer-full-test-report.md
+project-ideas-analysis.md
+
+
+

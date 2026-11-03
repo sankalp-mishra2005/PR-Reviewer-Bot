@@ -1,0 +1,32 @@
+{
+  "name": "pr-reviewer-bot",
+  "version": "1.0.0",
+  "description": "AI-powered GitHub PR Reviewer Bot",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@google/genai": "^3.2.0",
+    "@libsql/client": "^0.18.0",
+    "@octokit/auth-app": "^8.3.1",
+    "@octokit/webhooks": "^13.4.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.0",
+    "js-yaml": "^5.5.0",
+    "minimatch": "^11.0.8",
+    "octokit": "^4.1.0",
+    "parse-diff": "^0.12.0",
+    "smee-client": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/minimatch": "^5.1.2",
+    "@types/node": "^22.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}
