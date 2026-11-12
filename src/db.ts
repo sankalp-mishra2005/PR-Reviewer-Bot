@@ -27,6 +27,9 @@ export interface ReviewStats {
   commentsOnly: number;
   totalComments: number;
   totalCritical: number;
+  totalSuggestions: number;
+  totalNits: number;
+  totalRepos: number;
   avgDurationMs: number;
 }
 
@@ -93,6 +96,9 @@ export async function getReviewStats(): Promise<ReviewStats> {
       SUM(CASE WHEN assessment = 'COMMENT' THEN 1 ELSE 0 END) as commentsOnly,
       SUM(comment_count) as totalComments,
       SUM(critical_count) as totalCritical,
+      SUM(suggestion_count) as totalSuggestions,
+      SUM(nit_count) as totalNits,
+      COUNT(DISTINCT repo) as totalRepos,
       AVG(duration_ms) as avgDurationMs
     FROM reviews
   `);
@@ -105,6 +111,9 @@ export async function getReviewStats(): Promise<ReviewStats> {
     commentsOnly: Number(row.commentsOnly || 0),
     totalComments: Number(row.totalComments || 0),
     totalCritical: Number(row.totalCritical || 0),
+    totalSuggestions: Number(row.totalSuggestions || 0),
+    totalNits: Number(row.totalNits || 0),
+    totalRepos: Number(row.totalRepos || 0),
     avgDurationMs: Math.round(Number(row.avgDurationMs || 0)),
   };
 }
