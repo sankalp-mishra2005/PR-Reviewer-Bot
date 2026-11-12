@@ -235,6 +235,7 @@ export async function reviewPullRequest(params: ReviewParams): Promise<void> {
       suggestionCount,
       nitCount,
       durationMs,
+      findings: JSON.stringify(allComments),
     });
     console.log(`   📊 Telemetry saved to SQLite (${durationMs}ms, ${allComments.length} issues)`);
   } catch (dbErr: any) {

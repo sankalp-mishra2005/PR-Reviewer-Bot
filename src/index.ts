@@ -5,6 +5,11 @@ import { initDb } from "./db";
 import { dashboardRouter } from "./dashboard";
 const SmeeClient = require("smee-client");
 
+// Prevent unhandled promise rejections from crashing the server on network disconnects
+process.on("unhandledRejection", (reason: any) => {
+  console.warn("⚠️ Unhandled rejection caught:", reason?.message || reason);
+});
+
 // Load environment variables
 dotenv.config();
 
@@ -46,13 +51,22 @@ async function bootstrap() {
     console.log(`🔧 Environment: ${process.env.NODE_ENV || "development"}`);
 
     if (process.env.SMEE_URL) {
-      const smee = new SmeeClient({
-        source: process.env.SMEE_URL,
-        target: `http://localhost:${PORT}/webhook`,
-        logger: console,
-      });
-      smee.start();
-      console.log(`🌐 Smee forwarding: ${process.env.SMEE_URL} -> http://localhost:${PORT}/webhook`);
+      try {
+        const smee = new SmeeClient({
+          source: process.env.SMEE_URL,
+          target: `http://localhost:${PORT}/webhook`,
+          logger: console,
+        });
+        const events = smee.start();
+        if (events && typeof events.on === "function") {
+          events.on("error", (err: any) => {
+            console.warn("⚠️ Smee event stream warning:", err?.message || err);
+          });
+        }
+        console.log(`🌐 Smee forwarding: ${process.env.SMEE_URL} -> http://localhost:${PORT}/webhook`);
+      } catch (smeeErr: any) {
+        console.warn("⚠️ Could not start Smee tunnel:", smeeErr?.message || smeeErr);
+      }
     }
 
     console.log("=".repeat(50));

@@ -18,6 +18,7 @@ export interface ReviewRecord {
   suggestionCount: number;
   nitCount: number;
   durationMs: number;
+  findings?: string;
 }
 
 export interface ReviewStats {
@@ -51,9 +52,16 @@ export async function initDb(): Promise<void> {
       suggestion_count INTEGER NOT NULL,
       nit_count INTEGER NOT NULL,
       duration_ms INTEGER NOT NULL,
+      findings TEXT DEFAULT '[]',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  try {
+    await db.execute(`ALTER TABLE reviews ADD COLUMN findings TEXT DEFAULT '[]';`);
+  } catch {
+    // Column already exists
+  }
 }
 
 /**
@@ -65,8 +73,8 @@ export async function recordReview(record: ReviewRecord): Promise<void> {
       INSERT INTO reviews (
         repo, pr_number, pr_title, author, assessment,
         summary, comment_count, critical_count, suggestion_count,
-        nit_count, duration_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        nit_count, duration_ms, findings
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     args: [
       record.repo,
@@ -80,6 +88,7 @@ export async function recordReview(record: ReviewRecord): Promise<void> {
       record.suggestionCount,
       record.nitCount,
       record.durationMs,
+      record.findings || "[]",
     ],
   });
 }
