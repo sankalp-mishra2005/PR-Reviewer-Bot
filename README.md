@@ -1,4 +1,4 @@
-# 🤖 Autonomous AI PR Reviewer Bot
+# Autonomous PR Reviewer & Observability Suite
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)

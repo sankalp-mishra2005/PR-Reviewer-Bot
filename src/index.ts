@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 // Health check endpoint
 app.get("/", (_req, res) => {
   res.json({
-    status: "🤖 PR Reviewer Bot is running!",
+    status: "PR Reviewer Bot is running!",
     version: "1.0.0",
     dashboard: `http://localhost:${PORT}/dashboard`,
     timestamp: new Date().toISOString(),
@@ -38,7 +38,7 @@ async function bootstrap() {
 
   app.listen(PORT, () => {
     console.log("=".repeat(50));
-    console.log("🤖 PR Reviewer Bot (Phase 4 — Production Ready)");
+    console.log("PR Reviewer Bot (Phase 4 — Production Ready)");
     console.log("=".repeat(50));
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📊 Dashboard UI:   http://localhost:${PORT}/dashboard`);

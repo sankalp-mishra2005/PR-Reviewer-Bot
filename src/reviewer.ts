@@ -26,7 +26,7 @@ export async function reviewPullRequest(params: ReviewParams): Promise<void> {
   const { owner, repo, pullNumber, installationId } = params;
   const startTime = Date.now();
 
-  console.log(`\n🤖 Starting Phase 4 AI review for ${owner}/${repo}#${pullNumber}...`);
+  console.log(`\nStarting Phase 4 AI review for ${owner}/${repo}#${pullNumber}...`);
 
   const octokit = createOctokitClient(installationId);
 
@@ -114,7 +114,7 @@ export async function reviewPullRequest(params: ReviewParams): Promise<void> {
       : "Commentary";
 
   let body = [
-    `## 🤖 AI Code Review Summary`,
+    `## Code Review Summary`,
     "",
     `**Status:** ${assessmentEmoji} **${assessmentText}**`,
     "",
