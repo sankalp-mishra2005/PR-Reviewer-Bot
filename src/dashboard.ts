@@ -17,10 +17,12 @@ dashboardRouter.get("/api/stats", async (_req, res) => {
   }
 });
 
-// JSON API: recent reviews
-dashboardRouter.get("/api/reviews", async (_req, res) => {
+// JSON API: recent reviews (supports optional ?repo=owner/repo&limit=N)
+dashboardRouter.get("/api/reviews", async (req, res) => {
   try {
-    const reviews = await getRecentReviews();
+    const repo = typeof req.query.repo === "string" ? req.query.repo : undefined;
+    const limit = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 50;
+    const reviews = await getRecentReviews(limit, repo);
     res.json(reviews);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -28,10 +30,16 @@ dashboardRouter.get("/api/reviews", async (_req, res) => {
 });
 
 // HTML Dashboard UI - Linear, Vercel, GitHub & Sentry Inspired SaaS Console
-dashboardRouter.get("/dashboard", async (_req, res) => {
+dashboardRouter.get("/dashboard", async (req, res) => {
   try {
+    const filterRepo = typeof req.query.repo === "string" ? req.query.repo : "";
     const stats = await getReviewStats();
-    const reviews = await getRecentReviews(50);
+    const reviews = await getRecentReviews(100);
+
+    // Extract unique repositories for the dropdown filter
+    const uniqueRepos = Array.from(
+      new Set(reviews.map((r: any) => String(r.repo)).filter(Boolean))
+    ).sort();
 
     const total = stats.totalReviews;
     const approvalRate = total > 0 ? Math.round((stats.approved / total) * 100) : 0;
@@ -285,7 +293,7 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
         <p class="text-xs text-zinc-400 mt-0.5">Continuous automated inspection, defect categorization, and real-time execution metrics.</p>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono text-zinc-400">
-        <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800">Target: All Repositories</span>
+        <span id="activeRepoBadge" class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono">Scope: All Repositories</span>
       </div>
     </div>
 
@@ -388,11 +396,19 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
           </div>
         </div>
 
-        <!-- Right: Search Input -->
-        <div class="flex items-center gap-2">
-          <div class="relative w-full sm:w-64">
+        <!-- Right: Repository Dropdown & Search Input -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Repo Selector Dropdown -->
+          <div class="relative">
+            <select id="repoSelect" onchange="applyFilters()" class="bg-[#141722] border border-zinc-800 hover:border-zinc-700 rounded-md px-2.5 py-1 text-xs text-zinc-200 font-mono focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="">All Repositories (${uniqueRepos.length})</option>
+              ${uniqueRepos.map(r => `<option value="${r}" ${filterRepo === r ? "selected" : ""}>${r}</option>`).join("")}
+            </select>
+          </div>
+
+          <div class="relative w-full sm:w-56">
             <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Filter repo, title, author..." class="w-full bg-[#141722] border border-zinc-800 hover:border-zinc-700 rounded-md pl-8 pr-2.5 py-1 text-xs text-zinc-200 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors">
+            <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Filter title, author..." class="w-full bg-[#141722] border border-zinc-800 hover:border-zinc-700 rounded-md pl-8 pr-2.5 py-1 text-xs text-zinc-200 font-mono placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors">
           </div>
           <span id="rowCountPill" class="text-xs font-mono text-zinc-500 whitespace-nowrap">${reviews.length} total</span>
         </div>
@@ -563,6 +579,7 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
     document.addEventListener('DOMContentLoaded', () => {
       initLatencyChart();
       initSeverityChart();
+      applyFilters();
     });
 
     function initLatencyChart() {
@@ -717,15 +734,17 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
 
     function applyFilters() {
       const search = (document.getElementById('searchInput').value || '').toLowerCase();
+      const selectedRepo = (document.getElementById('repoSelect')?.value || '').toLowerCase();
       const rows = document.querySelectorAll('.review-row');
       let visibleCount = 0;
 
       rows.forEach(row => {
-        const repo = row.getAttribute('data-repo') || '';
-        const author = row.getAttribute('data-author') || '';
+        const repo = (row.getAttribute('data-repo') || '').toLowerCase();
+        const author = (row.getAttribute('data-author') || '').toLowerCase();
         const decision = row.getAttribute('data-decision') || '';
         const critCount = parseInt(row.getAttribute('data-critical') || '0', 10);
 
+        const repoMatches = !selectedRepo || repo === selectedRepo;
         const textMatches = !search || repo.includes(search) || author.includes(search) || row.textContent.toLowerCase().includes(search);
 
         let tabMatches = true;
@@ -737,7 +756,7 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
           tabMatches = critCount > 0;
         }
 
-        if (textMatches && tabMatches) {
+        if (repoMatches && textMatches && tabMatches) {
           row.style.display = '';
           visibleCount++;
         } else {
@@ -748,6 +767,11 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
       const pill = document.getElementById('rowCountPill');
       if (pill) {
         pill.textContent = visibleCount + ' of ' + rows.length + ' PRs';
+      }
+
+      const activeBadge = document.getElementById('activeRepoBadge');
+      if (activeBadge) {
+        activeBadge.textContent = selectedRepo ? 'Scope: ' + selectedRepo : 'Scope: All Repositories';
       }
     }
 

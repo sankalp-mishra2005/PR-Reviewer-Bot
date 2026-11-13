@@ -338,9 +338,17 @@ export async function getReviewStats(): Promise<ReviewStats> {
 }
 
 /**
- * Retrieve recent review history records.
+ * Retrieve recent review history records, optionally filtered by repository.
  */
-export async function getRecentReviews(limit: number = 25): Promise<any[]> {
+export async function getRecentReviews(limit: number = 25, repo?: string): Promise<any[]> {
+  if (repo) {
+    const result = await db.execute({
+      sql: `SELECT * FROM reviews WHERE repo = ? ORDER BY id DESC LIMIT ?`,
+      args: [repo, limit],
+    });
+    return result.rows;
+  }
+
   const result = await db.execute({
     sql: `SELECT * FROM reviews ORDER BY id DESC LIMIT ?`,
     args: [limit],
