@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 /**
  * Payment processing route handler.
+ * Triggering automated AI code review via PR synchronization event.
  */
 export async function processPayment(req: Request, res: Response) {
   const { userId, amount, currency, sourceToken } = req.body;
