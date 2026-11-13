@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 /**
  * Payment processing route handler.
- * Triggering automated AI code review via PR synchronization event.
+ * Evaluated by ReviewPulse AI Agent on Railway.
  */
 export async function processPayment(req: Request, res: Response) {
   const { userId, amount, currency, sourceToken } = req.body;
