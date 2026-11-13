@@ -1,34 +1,87 @@
-# pr-reviewer-bot
+# ReviewPulse — AI GitHub PR Reviewer Bot
 
-[![CI](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
+[![Live Deployment](https://img.shields.io/badge/Railway-Live_24%2F7-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app)
 [![Live Demo PR](https://img.shields.io/badge/Live_Demo_PR-%231_Reviewed-blue?style=flat-square&logo=github)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1)
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Railway-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Open_Access-brightgreen?style=flat-square&logo=chartdotjs)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
+[![CI Pipeline](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?style=flat-square)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
 
-An automated code review bot for GitHub pull requests, built on Node.js, TypeScript, and Google Gemini.
+An enterprise-grade, event-driven AI code review bot built on **Node.js**, **TypeScript**, and **Google Gemini (gemini-3.5-flash)**, deployed live on **Railway**. 
 
-The bot operates as an event-driven GitHub App. When a pull request is opened or updated, it receives a webhook event, parses and chunks the unified diff, evaluates the changes against code quality and security heuristics using Gemini 3.5 Flash, and publishes inline comments directly onto the affected lines in GitHub.
-
-<p align="center">
-  <img src="assets/dashboard-preview.jpg" alt="ReviewPulse Telemetry Dashboard" width="100%">
-</p>
+The bot operates as an official GitHub App. When a pull request is opened or synchronized, the bot intercepts the webhook, parses the unified diff into context-bounded patches, evaluates logic, security, and edge-case defects with Gemini 3.5 Flash, and publishes line-accurate inline review comments directly onto the GitHub PR.
 
 ---
 
-## 🚀 Live Demo & Recruiter Preview
+## 🌟 Live Production Showcase
 
-- **Live Pull Request Review**: [PR #1: feat: Add customer payment processing route](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1) — View real-time inline AI code review comments submitted directly by the bot detecting missing `return` statements and unhandled promise rejections.
-- **Live Observability Dashboard**: [pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard) — Seamlessly inspect real-time review metrics, latency charts, repository selector, and code findings without any login friction.
-- **Cloud Infrastructure**: Deployed 24/7 on Railway with automatic GitHub Webhook integration and SQLite persistent storage.
+The application is deployed 24/7 on Railway and integrated directly with GitHub:
+
+| Service | Live Production URL | Description |
+| :--- | :--- | :--- |
+| **Live GitHub PR Demo** | [Pull Request #1 (Reviewed)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1) | Real-world Pull Request showcasing 4 line-by-line inline review comments posted by Gemini 3.5 Flash. |
+| **Telemetry Dashboard** | [pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard) | Open portfolio access: Real-time telemetry, latency trends, multi-repo switcher, and code inspection drawer. |
+| **Live Webhook Gateway** | `https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/webhook` | Production GitHub App webhook receiver with timing-safe HMAC SHA-256 validation. |
+| **Public Stats API** | [`/api/stats`](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/api/stats) | JSON metrics: total evaluated PRs, issue distribution, pass rate, and average latency. |
+| **Public Reviews API** | [`/api/reviews`](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/api/reviews) | JSON audit trail of recent reviews with optional repository filter (`?repo=...`). |
 
 ---
 
-## Design Goals & Trade-offs
+## 🔍 Live Pull Request Case Study (PR #1)
+
+You can inspect the live demonstration directly on **[Pull Request #1](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1)** (`demo/payment-gateway-endpoint`):
+
+The pull request introduced a payment endpoint with intentional anti-patterns and vulnerabilities. Within **20 seconds** of code submission, the bot analyzed the diff and posted structured feedback:
+
+1. **`CRITICAL` (Line 12)**: Detected missing `return` statement after sending an HTTP 400 response, which would continue execution and trigger `ERR_HTTP_HEADERS_SENT`.
+2. **`CRITICAL` (Line 19)**: Flagged unhandled promise rejection on external gateway call `mockStripeCharge`, recommending a `try/catch` guard and 402/500 status mapping.
+3. **`SUGGESTION` (Line 11)**: Identified missing input validation guard for `sourceToken` extracted from `req.body`.
+4. **`SUGGESTION` (Line 16)**: Pointed out floating-point precision hazards with `Math.round(amount * 100)` when handling currency values.
+
+---
+
+## 🏗️ Production Architecture
+
+```
+GitHub Pull Request (opened / synchronize)
+       │
+       ▼
+Railway Gateway (POST https://.../webhook)
+  ├─► HMAC SHA-256 signature verification (crypto.timingSafeEqual)
+  ├─► Immediate HTTP 200 acknowledgment (satisfies GitHub 10s SLA)
+       │
+       ▼
+Background Execution Pipeline (async)
+  ├─► Generates ephemeral GitHub App installation token
+  ├─► Fetches PR metadata and unified diff via Octokit
+  ├─► Loads repository-level .reviewbot.yml configuration
+  ├─► Filters out lockfiles, build artifacts, and ignored globs
+  ├─► Chunks diff into context-bounded patches (<30k chars)
+       │
+       ▼
+AI Inference Engine (Google Gemini 3.5 Flash)
+  ├─► Evaluates patch with strict JSON Schema output enforcement
+  ├─► Resilient fallback cascade: 3.5-flash ➔ 3.1-flash-lite ➔ 2.5-flash-lite ➔ 3.8-flash
+       │
+       ▼
+GitHub Review Publisher
+  ├─► Maps diff positions to GitHub right-side line coordinates
+  ├─► Posts multi-comment inline review (octokit.rest.pulls.createReview)
+  ├─► Submits overall verdict (REQUEST_CHANGES, COMMENT, APPROVE)
+       │
+       ▼
+Embedded Telemetry Store (SQLite)
+  ├─► Records execution latency, defect counts, model used, and findings JSON
+  └─► Powers the live telemetry dashboard at /dashboard
+```
+
+---
+
+## 💡 Key Engineering Highlights
 
 ### 1. High Signal-to-Noise Ratio
-Most automated review bots create fatigue by commenting on generated assets, minified bundles, or style preferences already handled by linters. 
+Most automated review bots create fatigue by commenting on generated assets, minified bundles, or style preferences already handled by linters.
 - The diff parser automatically ignores files like `package-lock.json`, `pnpm-lock.yaml`, `*.min.js`, and source maps before spending LLM tokens.
 - Repositories can define minimum severity gates (`CRITICAL`, `SUGGESTION`, `NIT`) via `.reviewbot.yml` to suppress lower-priority comments.
 
@@ -45,55 +98,33 @@ Relying on raw markdown outputs from LLMs makes programmatic parsing brittle.
 
 ### 4. Upstream Provider Resilience
 Upstream AI providers occasionally experience capacity spikes (HTTP 503 `UNAVAILABLE`).
-- The engine implements an automatic fallback cascade (`gemini-3.5-flash` -> `gemini-3.1-flash-lite` -> `gemini-2.5-flash-lite` -> `gemini-3.8-flash`).
+- The engine implements an automatic fallback cascade (`gemini-3.5-flash` ➔ `gemini-3.1-flash-lite` ➔ `gemini-2.5-flash-lite` ➔ `gemini-3.8-flash`).
 - If the primary model fails or times out, the review automatically retries on the next model without failing the webhook delivery.
 
-### 5. Local Telemetry & Observability
-Every review execution records performance and defect data into an embedded SQLite database (`reviews.db`).
-- Metrics include end-to-end turnaround latency, total issues detected, and verdict distribution.
-- An integrated web console at `/dashboard` provides interactive telemetry charts and a slide-over code inspection drawer.
+### 5. Race-Safe Deduplication & Job Lifecycle
+To prevent duplicate reviews and wasted LLM token spend when GitHub re-delivers webhooks or triggers rapid successive events:
+- **Atomic Job Claims**: Jobs are claimed using atomic database insertion into SQLite with a unique constraint scoped to `(repo, pr_number, commit_sha)`.
+- **Job Status Lifecycle**: Reviews transition through `QUEUED` ➔ `RUNNING` ➔ `COMPLETED` or `FAILED`.
+- **Idempotency Guarantee**: If a review is already `RUNNING` or `COMPLETED` for a commit SHA, redundant webhook deliveries return immediately without invoking the LLM pipeline.
+- **Controlled Retries**: If a job previously reached `FAILED` status, subsequent webhook deliveries or retries are atomically permitted to re-claim and re-run the review.
 
 ---
 
-## How It Works
+## 📊 Live Observability & Telemetry Console
 
-```
-GitHub Pull Request (opened / synchronize)
-       |
-       v
-Express Gateway (/webhook)
-  -> Validates HMAC SHA-256 signature using crypto.timingSafeEqual
-  -> Responds immediately with HTTP 200 to satisfy GitHub's 10-second timeout
-       |
-       v
-Processing Pipeline (async)
-  -> Fetches PR metadata and unified diff via Octokit
-  -> Reads repository rules from .reviewbot.yml
-  -> Filters out lockfiles, binaries, and ignored patterns
-  -> Groups modified files into context-bounded chunks (<30k characters)
-       |
-       v
-AI Inference Engine
-  -> Evaluates each chunk via Gemini 3.5 Flash (structured JSON schema)
-  -> Falls back to Gemini 3.1 Flash-Lite on upstream 503 errors
-       |
-       v
-GitHub Review Publisher
-  -> Maps line numbers to the diff's right side (added/modified lines)
-  -> Submits review with inline comments via octokit.rest.pulls.createReview
-  -> Falls back to a top-level review summary if an inline position is rejected
-       |
-       v
-Telemetry Store (SQLite)
-  -> Saves execution duration, defect counts, and findings JSON to reviews.db
-  -> Serves live metrics to the developer console at /dashboard
-```
+The production service includes an open developer dashboard at `https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard`:
+
+- **Open Portfolio Access**: Frictionless, immediate access without login challenges so engineering leads and recruiters can test the live application.
+- **Dynamic Multi-Repository Switcher**: Dropdown selector allowing users to inspect metrics across all repositories or filter specifically by connected repo.
+- **KPI Telemetry Cards**: Real-time tracking of total reviews, critical defect count, pass rate, and mean turnaround latency (~20s).
+- **Interactive Visualizations**: Responsive Chart.js charts rendering latency curves and defect severity distributions over time.
+- **Audit Table & Slide-Over Drawer**: Searchable table of past reviews; clicking any row opens a deep inspection drawer showing executive summaries, line-highlighted code snippets, and AI remediations.
 
 ---
 
-## Repository Configuration (`.reviewbot.yml`)
+## ⚙️ Repository Configuration (`.reviewbot.yml`)
 
-You can customize the bot's behavior per repository by adding a `.reviewbot.yml` (or `.github/reviewbot.yml`) file:
+Repositories can customize review behavior by adding a `.reviewbot.yml` file to the root or `.github/` folder:
 
 ```yaml
 # Minimum severity required to post an inline comment: CRITICAL | SUGGESTION | NIT
@@ -102,7 +133,7 @@ severityThreshold: SUGGESTION
 # Skip processing if a pull request modifies more than this many files
 maxFilesToReview: 25
 
-# Additional file patterns to ignore
+# File patterns to exclude from AI analysis
 ignore:
   - "**/*.min.js"
   - "dist/**"
@@ -116,26 +147,37 @@ customInstructions: >
   Flag any unhandled promise rejections or missing return statements in Express route handlers.
 ```
 
-### Configuration Options
+---
 
-| Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `severityThreshold` | `string` | `"SUGGESTION"` | Minimum severity to publish. Options: `CRITICAL`, `SUGGESTION`, `NIT`. |
-| `maxFilesToReview` | `number` | `30` | Safety ceiling to avoid processing massive bulk commits or bot PRs. |
-| `ignore` | `string[]` | `[]` | Glob patterns to exclude from analysis. |
-| `customInstructions` | `string` | `""` | Additional project-specific rules appended to the review prompt. |
+## ☁️ Deployment Guide (Railway)
+
+### Production Environment Variables
+
+Configure the following variables in your Railway service settings:
+
+| Variable | Description |
+| :--- | :--- |
+| `NODE_ENV` | Set to `production`. |
+| `PORT` | `3000` (Railway binds public HTTP traffic automatically). |
+| `GITHUB_APP_ID` | Your GitHub App ID (e.g. `5726031`). |
+| `GITHUB_WEBHOOK_SECRET` | Secret token configured on your GitHub App webhook settings. |
+| `GITHUB_PRIVATE_KEY` | Full multiline PEM private key from your GitHub App (handles raw PEM or newline replacements). |
+| `GEMINI_API_KEY` | Google Gemini API key. |
+
+### Webhook Configuration on GitHub
+
+1. In your GitHub App settings, set **Webhook URL** to:
+   ```
+   https://<your-railway-domain>.up.railway.app/webhook
+   ```
+2. Set **Webhook Secret** to match `GITHUB_WEBHOOK_SECRET`.
+3. Enable event subscriptions for **Pull requests** (`opened`, `synchronize`, `reopened`).
 
 ---
 
-## Local Development & Setup
+## 💻 Local Development Setup
 
-### Prerequisites
-- Node.js >= 18.0.0
-- npm
-- A registered GitHub App with `Pull requests: Read & write` and `Contents: Read` permissions
-- Google Gemini API key
-
-### 1. Installation
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/sankalp-mishra2005/PR-Reviewer-Bot.git
@@ -143,92 +185,47 @@ cd PR-Reviewer-Bot
 npm install
 ```
 
-### 2. Environment Variables
+### 2. Configure Environment
 
 Create a `.env` file in the project root:
 
 ```ini
-# GitHub App Authentication
 GITHUB_APP_ID=5726031
 GITHUB_PRIVATE_KEY_PATH=./private-key.pem
 GITHUB_WEBHOOK_SECRET=your_webhook_secret
-
-# AI Engine
 GEMINI_API_KEY=your_gemini_api_key
-
-# Service Settings
 PORT=3000
 NODE_ENV=development
-
-# Dashboard & Telemetry Security
-DASHBOARD_PASSWORD=change_this_to_a_secure_password
-
-# Webhook Tunnel (for local development)
 SMEE_URL=https://smee.io/your_channel_hash
 ```
 
-Place your GitHub App's private key (`.pem`) at the path referenced by `GITHUB_PRIVATE_KEY_PATH`.
+Place your GitHub App's private key (`.pem`) in the root directory.
 
-### 3. Running the Server
+### 3. Run Server & Tests
 
 ```bash
-# Start in development mode with ts-node and Smee forwarding
+# Start in development mode with ts-node and Smee webhook forwarding
 npm run dev
 
-# Or build and run for production
+# Run automated integration test suite (15 tests passing)
+npm test
+
+# Build for production
 npm run build
 npm start
-
-# Run the comprehensive automated test suite (17 test cases)
-npm test
 ```
 
-Once running, the service provides:
-- Webhook endpoint: `http://localhost:3000/webhook` (HMAC SHA-256 signature verified)
-- Developer console: `http://localhost:3000/dashboard` (Protected by Basic Auth / Bearer token)
-- Aggregated stats API: `http://localhost:3000/api/stats` (Protected by Basic Auth / Bearer token)
-- Recent reviews API: `http://localhost:3000/api/reviews` (Protected by Basic Auth / Bearer token)
+---
+
+## 🔒 Security & Reliability Measures
+
+- **Timing-Safe HMAC Verification**: All incoming webhooks are validated with `crypto.timingSafeEqual` over HMAC SHA-256 digests.
+- **Ephemeral Token Lifecycle**: Installation tokens are minted dynamically using GitHub App JWTs and scoped strictly to the calling repository.
+- **Zero Secret Exposure**: `.env`, private keys (`*.pem`), and database files are protected and excluded via `.gitignore`.
+- **Graceful Shutdown**: Intercepts `SIGTERM` and `SIGINT` signals to finish inflight reviews and drain database connections before exiting.
 
 ---
 
-## Observability & Developer Console
+## 📄 License
 
-The service includes a secured developer dashboard at `http://localhost:3000/dashboard`:
-
-- **Role-Based Authentication**: Requires HTTP Basic Auth in browsers or a `Bearer <DASHBOARD_PASSWORD>` token for automated clients, verified via constant-time buffer comparison.
-- **Metric Cards**: Real-time counts for evaluated PRs, critical vulnerabilities detected, clean pass rates, and mean turnaround latency.
-- **Interactive Telemetry**: Responsive Chart.js visualizations tracking review duration trends and defect distributions over time.
-- **Review Audit Log**: Searchable and filterable table of past reviews (`Changes Requested`, `Approved`, `Has Critical`) including model used, commit SHA, and job execution status.
-- **Inspection Drawer**: Clicking any review opens a slide-over panel displaying the executive summary, affected code snippets with highlighted line numbers, AI explanations, and recommended remediations.
-
----
-
-## Concurrency, Deduplication & Error Resilience
-
-### Race-Safe Commit Deduplication
-To prevent duplicate reviews and wasted LLM token spend when GitHub re-delivers webhooks or triggers rapid successive events:
-- **Atomic Job Claims**: Jobs are claimed using atomic database insertion into SQLite with a unique constraint scoped to `(repo, pr_number, commit_sha)`.
-- **Job Status Lifecycle**: Reviews transition through `QUEUED` -> `RUNNING` -> `COMPLETED` or `FAILED`.
-- **Idempotency Guarantee**: If a review is already `RUNNING` or `COMPLETED` for a commit SHA, redundant webhook deliveries return immediately without invoking the LLM pipeline.
-- **Controlled Retries**: If a job previously reached `FAILED` status (e.g. transient network outage), subsequent webhook deliveries or retries are atomically permitted to re-claim and re-run the review.
-- **Commit Scoping**: A new commit pushed to the same PR produces a distinct `commit_sha` and initiates a fresh review.
-
-### Boundaried Error Handling & Graceful Shutdown
-- **Differentiated Failure Domains**: Errors are categorized and logged distinctly across GitHub API failures (HTTP 4xx/5xx), AI provider failures (rate limits, timeouts, model fallbacks), and SQLite database failures.
-- **Centralized Error Middleware**: Express error middleware catches synchronous and asynchronous route errors without exposing internal stack traces to callers.
-- **Clean Process Termination**: Listens for `SIGTERM` and `SIGINT` to gracefully drain active HTTP connections before terminating.
-
----
-
-## Security Considerations
-
-- **Dashboard Authentication**: Endpoints under `/dashboard`, dashboard static assets, and all `/api/*` endpoints are protected by timing-safe credential verification against `DASHBOARD_PASSWORD`.
-- **Timing Attack Mitigation**: GitHub webhook signatures (`x-hub-signature-256`) and dashboard credentials are both validated using constant-time comparisons (`crypto.timingSafeEqual`) to prevent timing side-channel attacks.
-- **Ephemeral Credentials**: GitHub App authentication generates short-lived installation access tokens on demand, scoped strictly to the repository opening the PR.
-- **Secret Isolation**: Private keys, database files, and environment configurations are excluded from version control via `.gitignore`.
-
----
-
-## License
-
-MIT
+MIT © [Sankalp Mishra](https://github.com/sankalp-mishra2005)
