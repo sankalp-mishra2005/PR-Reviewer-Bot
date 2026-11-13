@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { getRecentReviews, getReviewStats, ReviewStats } from "./db";
+import { requireDashboardAuth } from "./auth";
 
 export const dashboardRouter = Router();
+
+// Enforce authentication across all dashboard and telemetry endpoints
+dashboardRouter.use(requireDashboardAuth);
 
 // JSON API: stats
 dashboardRouter.get("/api/stats", async (_req, res) => {
@@ -55,6 +59,9 @@ dashboardRouter.get("/dashboard", async (_req, res) => {
         prNumber: r.pr_number,
         prTitle: r.pr_title,
         author: r.author,
+        commitSha: r.commit_sha || "",
+        modelUsed: r.model_used || "gemini-3.5-flash",
+        status: r.status || "COMPLETED",
         assessment: r.assessment,
         summary: r.summary,
         commentCount: r.comment_count,

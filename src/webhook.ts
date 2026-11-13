@@ -10,7 +10,7 @@ import { reviewPullRequest } from "./reviewer";
  * Without this, anyone who knows your webhook URL could send fake
  * events and trick your bot into posting spam comments on PRs.
  */
-function verifyWebhookSignature(
+export function verifyWebhookSignature(
   payload: Buffer,
   signature: string | undefined,
   secret: string
@@ -57,8 +57,8 @@ export async function handleWebhook(
   );
 
   if (!isValid) {
-    console.warn("⚠️  Invalid webhook signature — rejecting request");
-    res.status(401).json({ error: "Invalid signature" });
+    console.warn("[SECURITY] Invalid webhook signature rejected");
+    res.status(401).json({ error: "Unauthorized", message: "Invalid webhook signature" });
     return;
   }
 
@@ -82,8 +82,12 @@ export async function handleWebhook(
       console.log(`       Author:     ${pr.user.login}`);
       console.log(`       Diff stats: +${pr.additions} -${pr.deletions} across ${pr.changed_files} files`);
 
-      // Respond immediately (GitHub expects a response within 10 seconds)
-      res.status(200).json({ message: "Review started" });
+      // Respond immediately to GitHub (webhook acknowledgment contract)
+      res.status(200).json({
+        message: "Webhook accepted; review pipeline dispatched",
+        pr: pr.number,
+        commit: pr.head.sha,
+      });
 
       // Process the review asynchronously
       try {
@@ -95,11 +99,23 @@ export async function handleWebhook(
         });
         console.log(`[INFO] Review pipeline complete for PR #${pr.number}`);
       } catch (error: any) {
-        console.error(`[ERROR] Review failed for PR #${pr.number}:`, error.message || error);
+        if (error.name === "HttpError") {
+          console.error(`[ERROR] [GitHub API Failure] PR #${pr.number}: HTTP ${error.status} - ${error.message}`);
+        } else if (String(error.message).includes("Gemini") || String(error.message).includes("models")) {
+          console.error(`[ERROR] [AI Provider Failure] PR #${pr.number}: ${error.message}`);
+        } else if (String(error.message).includes("SQLITE") || error.name === "LibsqlError") {
+          console.error(`[ERROR] [Database Failure] PR #${pr.number}: ${error.message}`);
+        } else {
+          console.error(`[ERROR] [Pipeline Failure] PR #${pr.number}:`, error.stack || error.message || error);
+        }
       }
 
       return;
     }
+
+    console.log(`[INFO] Ignored non-reviewable pull_request action: ${action}`);
+    res.status(200).json({ message: `Ignored non-reviewable pull_request action: ${action}` });
+    return;
   }
 
   // For all other events, just acknowledge

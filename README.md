@@ -146,6 +146,9 @@ GEMINI_API_KEY=your_gemini_api_key
 PORT=3000
 NODE_ENV=development
 
+# Dashboard & Telemetry Security
+DASHBOARD_PASSWORD=change_this_to_a_secure_password
+
 # Webhook Tunnel (for local development)
 SMEE_URL=https://smee.io/your_channel_hash
 ```
@@ -161,30 +164,52 @@ npm run dev
 # Or build and run for production
 npm run build
 npm start
+
+# Run the comprehensive automated test suite (17 test cases)
+npm test
 ```
 
-Once running, the server provides:
-- Webhook endpoint: `http://localhost:3000/webhook`
-- Developer console: `http://localhost:3000/dashboard`
-- Aggregated stats API: `http://localhost:3000/api/stats`
-- Recent reviews API: `http://localhost:3000/api/reviews`
+Once running, the service provides:
+- Webhook endpoint: `http://localhost:3000/webhook` (HMAC SHA-256 signature verified)
+- Developer console: `http://localhost:3000/dashboard` (Protected by Basic Auth / Bearer token)
+- Aggregated stats API: `http://localhost:3000/api/stats` (Protected by Basic Auth / Bearer token)
+- Recent reviews API: `http://localhost:3000/api/reviews` (Protected by Basic Auth / Bearer token)
 
 ---
 
 ## Observability & Developer Console
 
-The service includes an embedded web dashboard at `http://localhost:3000/dashboard`:
+The service includes a secured developer dashboard at `http://localhost:3000/dashboard`:
 
+- **Role-Based Authentication**: Requires HTTP Basic Auth in browsers or a `Bearer <DASHBOARD_PASSWORD>` token for automated clients, verified via constant-time buffer comparison.
 - **Metric Cards**: Real-time counts for evaluated PRs, critical vulnerabilities detected, clean pass rates, and mean turnaround latency.
 - **Interactive Telemetry**: Responsive Chart.js visualizations tracking review duration trends and defect distributions over time.
-- **Review Audit Log**: Searchable and filterable table of past reviews (`Changes Requested`, `Approved`, `Has Critical`).
+- **Review Audit Log**: Searchable and filterable table of past reviews (`Changes Requested`, `Approved`, `Has Critical`) including model used, commit SHA, and job execution status.
 - **Inspection Drawer**: Clicking any review opens a slide-over panel displaying the executive summary, affected code snippets with highlighted line numbers, AI explanations, and recommended remediations.
+
+---
+
+## Concurrency, Deduplication & Error Resilience
+
+### Race-Safe Commit Deduplication
+To prevent duplicate reviews and wasted LLM token spend when GitHub re-delivers webhooks or triggers rapid successive events:
+- **Atomic Job Claims**: Jobs are claimed using atomic database insertion into SQLite with a unique constraint scoped to `(repo, pr_number, commit_sha)`.
+- **Job Status Lifecycle**: Reviews transition through `QUEUED` -> `RUNNING` -> `COMPLETED` or `FAILED`.
+- **Idempotency Guarantee**: If a review is already `RUNNING` or `COMPLETED` for a commit SHA, redundant webhook deliveries return immediately without invoking the LLM pipeline.
+- **Controlled Retries**: If a job previously reached `FAILED` status (e.g. transient network outage), subsequent webhook deliveries or retries are atomically permitted to re-claim and re-run the review.
+- **Commit Scoping**: A new commit pushed to the same PR produces a distinct `commit_sha` and initiates a fresh review.
+
+### Boundaried Error Handling & Graceful Shutdown
+- **Differentiated Failure Domains**: Errors are categorized and logged distinctly across GitHub API failures (HTTP 4xx/5xx), AI provider failures (rate limits, timeouts, model fallbacks), and SQLite database failures.
+- **Centralized Error Middleware**: Express error middleware catches synchronous and asynchronous route errors without exposing internal stack traces to callers.
+- **Clean Process Termination**: Listens for `SIGTERM` and `SIGINT` to gracefully drain active HTTP connections before terminating.
 
 ---
 
 ## Security Considerations
 
-- **Timing Attack Mitigation**: GitHub webhook signatures are verified using `crypto.timingSafeEqual` over SHA-256 HMAC buffers rather than basic string comparisons.
+- **Dashboard Authentication**: Endpoints under `/dashboard`, dashboard static assets, and all `/api/*` endpoints are protected by timing-safe credential verification against `DASHBOARD_PASSWORD`.
+- **Timing Attack Mitigation**: GitHub webhook signatures (`x-hub-signature-256`) and dashboard credentials are both validated using constant-time comparisons (`crypto.timingSafeEqual`) to prevent timing side-channel attacks.
 - **Ephemeral Credentials**: GitHub App authentication generates short-lived installation access tokens on demand, scoped strictly to the repository opening the PR.
 - **Secret Isolation**: Private keys, database files, and environment configurations are excluded from version control via `.gitignore`.
 

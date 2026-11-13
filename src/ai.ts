@@ -11,6 +11,7 @@ export interface ReviewResult {
   summary: string;
   overallAssessment: "APPROVE" | "REQUEST_CHANGES" | "COMMENT";
   comments: ReviewComment[];
+  modelUsed: string;
 }
 
 export interface ReviewParams {
@@ -38,15 +39,40 @@ function filterBySeverity(
 }
 
 /**
+ * Distinguish fatal client/auth/config errors from transient upstream rate-limits or 503 spikes.
+ */
+function isFatalClientOrAuthError(err: any): boolean {
+  const status = err?.status || err?.statusCode || err?.response?.status;
+  const msg = String(err?.message || "").toUpperCase();
+
+  if (status === 400 || status === 401 || status === 403 || status === 404) {
+    return true;
+  }
+
+  if (
+    msg.includes("API_KEY_INVALID") ||
+    msg.includes("API KEY NOT VALID") ||
+    msg.includes("PERMISSION_DENIED") ||
+    msg.includes("UNAUTHENTICATED") ||
+    msg.includes("INVALID_ARGUMENT")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * AI Code Review Engine powered by Google Gemini.
  *
  * Uses Gemini's structured output schema to ensure
- * type-safe, deterministic JSON responses.
+ * type-safe, deterministic JSON responses with automated
+ * upstream model failover and error classification.
  */
 export async function generateCodeReview(params: ReviewParams): Promise<ReviewResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set in .env!");
+    throw new Error("GEMINI_API_KEY is not set in environment");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -58,25 +84,29 @@ Your goal is to provide high-signal, actionable feedback that helps the author s
 CORE REVIEW PRINCIPLES:
 1. FOCUS ON:
    - Logic bugs, race conditions, edge case failures.
-   - Security vulnerabilities (injection, auth flaws, secret leaks).
-   - Resource leaks, performance bottlenecks, unhandled async errors.
-   - Error handling and defensive programming.
-2. AVOID NOISE:
-   - Do NOT comment on trivial formatting or style unless it causes a bug.
-   - Do NOT repeat what the code does ("This line adds a variable...").
-   - Filter out trivial nits unless they have real consequences.
-3. INLINE COMMENTS:
-   - "path" must be the exact relative filename.
-   - "line" must be the line number in the NEW version of the file (added or modified line).
-   - Provide concrete suggestions or code snippets showing how to fix the issue.
-4. OVERALL ASSESSMENT:
-   - "APPROVE": Changes are safe, clean, and ready to merge.
-   - "REQUEST_CHANGES": Critical bugs, security flaws, or major architectural issues exist.
-   - "COMMENT": Minor suggestions or non-blocking feedback.
+   - Security vulnerabilities (injection, auth flaws, data exposure, IDOR).
+   - Performance bottlenecks (N+1 queries, memory leaks, unindexed operations).
+   - Error handling (unhandled rejections, silent failures).
+   - Architectural regressions.
+
+2. DO NOT COMMENT ON:
+   - Formatting, whitespace, stylistic preferences (let linters handle this).
+   - Import ordering or trivial naming preferences.
+   - Code that was not changed in the diff.
+
+3. TONE & FORMAT:
+   - Be constructive, precise, and concise.
+   - Provide concrete code remediation examples where appropriate.
+   - Reference exact file paths and line numbers.
+
+4. SEVERITY TIERS:
+   - CRITICAL: Must-fix bugs that cause security holes, data loss, crashes, or financial errors.
+   - SUGGESTION: Important improvements for reliability, maintainability, or performance.
+   - NIT: Minor non-blocking observations.
 `;
 
   if (params.customInstructions) {
-    systemInstruction += `\nREPOSITORY CUSTOM INSTRUCTIONS:\n${params.customInstructions}\n`;
+    systemInstruction += `\nREPOSITORY-SPECIFIC RULES:\n${params.customInstructions}\n`;
   }
 
   const userPrompt = `
@@ -98,10 +128,13 @@ ${params.diff}
 
   let response: any = null;
   let lastError: any = null;
+  let modelUsed = fallbackModels[0];
 
   for (const model of fallbackModels) {
     try {
-      console.log(`      Attempting review with ${model}...`);
+      console.log(`      [INFO] Dispatching review request to model: ${model}...`);
+      modelUsed = model;
+
       response = await ai.models.generateContent({
         model,
         contents: userPrompt,
@@ -152,26 +185,36 @@ ${params.diff}
           },
         },
       });
+
       if (response && response.text) {
-        break; // Successfully got response!
+        break; // Successfully got response
       }
     } catch (err: any) {
-      console.warn(`      Model ${model} hit error: ${err.message}. Trying next fallback...`);
       lastError = err;
+
+      // Fail fast on authentication, authorization, or schema errors
+      if (isFatalClientOrAuthError(err)) {
+        console.error(`      [ERROR] Fatal authentication/client error on model ${model}: ${err.message}. Aborting failover cascade.`);
+        throw err;
+      }
+
+      // Transient capacity (503/429) - proceed to fallback model
+      console.warn(`      [WARN] Model ${model} returned transient error: ${err.message}. Stepping to next fallback model...`);
     }
   }
 
   if (!response || !response.text) {
-    throw new Error(`All Gemini models failed. Last error: ${lastError?.message}`);
+    throw new Error(`All Gemini review models exhausted. Last error: ${lastError?.message}`);
   }
 
   const text = response.text;
   if (!text) {
-    throw new Error("Gemini returned an empty response");
+    throw new Error("Gemini returned empty response payload");
   }
 
   const parsed = JSON.parse(text) as ReviewResult;
   parsed.comments = filterBySeverity(parsed.comments, params.severityThreshold);
+  parsed.modelUsed = modelUsed;
 
   return parsed;
 }

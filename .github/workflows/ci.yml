@@ -30,5 +30,9 @@ jobs:
       - name: TypeScript Typecheck
         run: npm run typecheck
 
+      - name: Run Automated Test Suite
+        run: npm test
+
       - name: Compile Production Build
         run: npm run build
+
