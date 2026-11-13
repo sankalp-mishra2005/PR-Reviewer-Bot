@@ -14,8 +14,27 @@ import fs from "fs";
  * The Octokit SDK handles all of this for us automatically.
  */
 export function createOctokitClient(installationId: number): Octokit {
-  const privateKeyPath = process.env.GITHUB_PRIVATE_KEY_PATH || "./private-key.pem";
-  const privateKey = fs.readFileSync(privateKeyPath, "utf-8");
+  let privateKey: string;
+
+  // Support reading private key directly from environment variable (ideal for cloud deployments)
+  if (process.env.GITHUB_PRIVATE_KEY) {
+    const rawKey = process.env.GITHUB_PRIVATE_KEY.trim();
+    if (rawKey.includes("BEGIN RSA PRIVATE KEY") || rawKey.includes("BEGIN PRIVATE KEY")) {
+      privateKey = rawKey.replace(/\\n/g, "\n");
+    } else {
+      // Handle base64 encoded private key
+      try {
+        const decoded = Buffer.from(rawKey, "base64").toString("utf-8");
+        privateKey = decoded.includes("PRIVATE KEY") ? decoded : rawKey.replace(/\\n/g, "\n");
+      } catch {
+        privateKey = rawKey.replace(/\\n/g, "\n");
+      }
+    }
+  } else {
+    // Fall back to reading from local filesystem path
+    const privateKeyPath = process.env.GITHUB_PRIVATE_KEY_PATH || "./private-key.pem";
+    privateKey = fs.readFileSync(privateKeyPath, "utf-8");
+  }
 
   return new Octokit({
     authStrategy: createAppAuth,
