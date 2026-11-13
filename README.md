@@ -9,6 +9,10 @@ An automated code review bot for GitHub pull requests, built on Node.js, TypeScr
 
 The bot operates as an event-driven GitHub App. When a pull request is opened or updated, it receives a webhook event, parses and chunks the unified diff, evaluates the changes against code quality and security heuristics using Gemini 3.5 Flash, and publishes inline comments directly onto the affected lines in GitHub.
 
+<p align="center">
+  <img src="assets/dashboard-preview.jpg" alt="ReviewPulse Telemetry Dashboard" width="100%">
+</p>
+
 ---
 
 ## Design Goals & Trade-offs
