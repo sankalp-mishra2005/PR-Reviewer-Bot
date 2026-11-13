@@ -1,7 +1,8 @@
 # pr-reviewer-bot
 
 [![CI](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
-[![Live Demo](https://img.shields.io/badge/Live_Dashboard-Railway-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
+[![Live Demo PR](https://img.shields.io/badge/Live_Demo_PR-%231_Reviewed-blue?style=flat-square&logo=github)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Railway-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?style=flat-square)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
@@ -13,6 +14,14 @@ The bot operates as an event-driven GitHub App. When a pull request is opened or
 <p align="center">
   <img src="assets/dashboard-preview.jpg" alt="ReviewPulse Telemetry Dashboard" width="100%">
 </p>
+
+---
+
+## 🚀 Live Demo & Recruiter Preview
+
+- **Live Pull Request Review**: [PR #1: feat: Add customer payment processing route](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1) — View real-time inline AI code review comments submitted directly by the bot detecting missing `return` statements and unhandled promise rejections.
+- **Live Observability Dashboard**: [pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard) — Seamlessly inspect real-time review metrics, latency charts, repository selector, and code findings without any login friction.
+- **Cloud Infrastructure**: Deployed 24/7 on Railway with automatic GitHub Webhook integration and SQLite persistent storage.
 
 ---
 
