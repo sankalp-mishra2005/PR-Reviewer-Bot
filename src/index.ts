@@ -29,12 +29,13 @@ app.get("/", (_req, res) => {
   res.json({
     status: "PR Reviewer Bot is running!",
     version: "2.0.0",
-    dashboard: `http://localhost:${PORT}/dashboard`,
+    dashboard: "/dashboard",
+    webhook: "/webhook",
     timestamp: new Date().toISOString(),
   });
 });
 
-// Mount Authenticated Observability Dashboard & Analytics API (/dashboard and /api/*)
+// Mount Observability Dashboard & Analytics API (/dashboard and /api/*)
 app.use(dashboardRouter);
 
 // Webhook endpoint - receives raw body for HMAC signature verification
