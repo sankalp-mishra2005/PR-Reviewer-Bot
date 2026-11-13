@@ -39,16 +39,16 @@ app.post(
 // Initialize database and start server
 async function bootstrap() {
   await initDb();
-  console.log("📦 SQLite database initialized (reviews.db)");
+  console.log("[INFO] SQLite database initialized (reviews.db)");
 
   app.listen(PORT, () => {
     console.log("=".repeat(50));
-    console.log("PR Reviewer Bot (Phase 4 — Production Ready)");
+    console.log("PR Reviewer Bot — Service Gateway");
     console.log("=".repeat(50));
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📊 Dashboard UI:   http://localhost:${PORT}/dashboard`);
-    console.log(`📡 Webhook endpoint: http://localhost:${PORT}/webhook`);
-    console.log(`🔧 Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`[INFO] Server listening on http://localhost:${PORT}`);
+    console.log(`[INFO] Dashboard UI:    http://localhost:${PORT}/dashboard`);
+    console.log(`[INFO] Webhook route:   http://localhost:${PORT}/webhook`);
+    console.log(`[INFO] Environment:     ${process.env.NODE_ENV || "development"}`);
 
     if (process.env.SMEE_URL) {
       try {
@@ -60,18 +60,17 @@ async function bootstrap() {
         const events = smee.start();
         if (events && typeof events.on === "function") {
           events.on("error", (err: any) => {
-            console.warn("⚠️ Smee event stream warning:", err?.message || err);
+            console.warn("[WARN] Smee event stream warning:", err?.message || err);
           });
         }
-        console.log(`🌐 Smee forwarding: ${process.env.SMEE_URL} -> http://localhost:${PORT}/webhook`);
+        console.log(`[INFO] Smee proxy forwarding: ${process.env.SMEE_URL} -> http://localhost:${PORT}/webhook`);
       } catch (smeeErr: any) {
-        console.warn("⚠️ Could not start Smee tunnel:", smeeErr?.message || smeeErr);
+        console.warn("[WARN] Could not start Smee tunnel:", smeeErr?.message || smeeErr);
       }
     }
 
     console.log("=".repeat(50));
-    console.log("");
-    console.log("Waiting for GitHub webhook events...");
+    console.log("[INFO] Listening for incoming GitHub webhook events...");
   });
 }
 

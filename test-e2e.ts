@@ -4,7 +4,7 @@ dotenv.config();
 
 async function runE2ETest() {
   console.log("==========================================");
-  console.log("🧪 Running End-to-End Test Suite");
+  console.log("[TEST] Running End-to-End Integration Suite");
   console.log("==========================================");
 
   const secret = process.env.GITHUB_WEBHOOK_SECRET || "prbot-secret-2024";
@@ -76,11 +76,11 @@ async function runE2ETest() {
   }
 
   console.log("==========================================");
-  console.log("🎉 E2E TEST COMPLETED SUCCESSFULLY!");
+  console.log("[PASS] End-to-end integration test passed successfully.");
   console.log("==========================================");
 }
 
 runE2ETest().catch((err) => {
-  console.error("❌ E2E Test Failed:", err);
+  console.error("[FAIL] Integration test failed:", err.message || err);
   process.exit(1);
 });

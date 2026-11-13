@@ -66,7 +66,7 @@ export async function handleWebhook(
   const event = req.headers["x-github-event"] as string;
   const payload = JSON.parse((req.body as Buffer).toString());
 
-  console.log(`\n📨 Received event: ${event} (action: ${payload.action})`);
+  console.log(`\n[INFO] Webhook received: ${event} (action: ${payload.action})`);
 
   // Step 3: Handle only pull_request events
   if (event === "pull_request") {
@@ -77,10 +77,10 @@ export async function handleWebhook(
       const pr = payload.pull_request;
       const repo = payload.repository;
 
-      console.log(`\n🔍 PR #${pr.number}: "${pr.title}"`);
-      console.log(`   📁 Repo: ${repo.full_name}`);
-      console.log(`   👤 Author: ${pr.user.login}`);
-      console.log(`   📊 Changes: +${pr.additions} -${pr.deletions} across ${pr.changed_files} files`);
+      console.log(`[INFO] Processing PR #${pr.number}: "${pr.title}"`);
+      console.log(`       Repository: ${repo.full_name}`);
+      console.log(`       Author:     ${pr.user.login}`);
+      console.log(`       Diff stats: +${pr.additions} -${pr.deletions} across ${pr.changed_files} files`);
 
       // Respond immediately (GitHub expects a response within 10 seconds)
       res.status(200).json({ message: "Review started" });
@@ -93,9 +93,9 @@ export async function handleWebhook(
           pullNumber: pr.number,
           installationId: payload.installation.id,
         });
-        console.log(`✅ Review complete for PR #${pr.number}`);
-      } catch (error) {
-        console.error(`❌ Review failed for PR #${pr.number}:`, error);
+        console.log(`[INFO] Review pipeline complete for PR #${pr.number}`);
+      } catch (error: any) {
+        console.error(`[ERROR] Review failed for PR #${pr.number}:`, error.message || error);
       }
 
       return;
