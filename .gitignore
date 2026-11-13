@@ -6,6 +6,7 @@ reviews.db
 *.db
 
 # Private notes & interview prep (do not push to GitHub)
+CHECKPOINT.md
 pr-reviewer-build-guide.md
 pr-reviewer-phase3-complete.md
 pr-reviewer-interview-mastery.md
