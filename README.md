@@ -1,6 +1,7 @@
 # pr-reviewer-bot
 
 [![CI](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
+[![Live Demo](https://img.shields.io/badge/Live_Dashboard-Railway-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?style=flat-square)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
