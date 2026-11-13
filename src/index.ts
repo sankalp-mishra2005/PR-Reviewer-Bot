@@ -78,10 +78,15 @@ async function bootstrap() {
           logger: console,
         });
         const events = smee.start();
-        if (events && typeof events.on === "function") {
-          events.on("error", (err: any) => {
-            console.warn("[WARN] Smee event stream warning:", err?.message || err);
-          });
+        if (events) {
+          if (typeof events.on === "function") {
+            events.on("error", (err: any) => {
+              console.warn("[WARN] Smee event stream warning:", err?.message || err);
+            });
+          }
+          events.onerror = (err: any) => {
+            console.warn("[WARN] Smee tunnel connection warning:", err?.message || err);
+          };
         }
         console.log(`[INFO] Smee proxy forwarding: ${process.env.SMEE_URL} -> http://localhost:${PORT}/webhook`);
       } catch (smeeErr: any) {
