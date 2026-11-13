@@ -1,5 +1,10 @@
 # pr-reviewer-bot
 
+[![CI](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green?style=flat-square)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
+
 An automated code review bot for GitHub pull requests, built on Node.js, TypeScript, and Google Gemini.
 
 The bot operates as an event-driven GitHub App. When a pull request is opened or updated, it receives a webhook event, parses and chunks the unified diff, evaluates the changes against code quality and security heuristics using Gemini 3.5 Flash, and publishes inline comments directly onto the affected lines in GitHub.
@@ -119,8 +124,8 @@ customInstructions: >
 ### 1. Installation
 
 ```bash
-git clone <repository-url>
-cd "PR Reviwer Bot"
+git clone https://github.com/sankalp-mishra2005/PR-Reviewer-Bot.git
+cd PR-Reviewer-Bot
 npm install
 ```
 
