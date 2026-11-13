@@ -10,6 +10,10 @@ jobs:
   validate:
     name: Build & Typecheck
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      DASHBOARD_PASSWORD: prbot-dashboard-pass-ci-test
+      GITHUB_WEBHOOK_SECRET: prbot-secret-ci-test
     strategy:
       matrix:
         node-version: [18.x, 20.x]

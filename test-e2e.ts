@@ -15,10 +15,18 @@ import { Server } from "http";
 
 dotenv.config();
 
+// Ensure test environment variables are set even when running in CI without a .env file
+if (!process.env.DASHBOARD_PASSWORD) {
+  process.env.DASHBOARD_PASSWORD = "prbot-dashboard-pass-2024";
+}
+if (!process.env.GITHUB_WEBHOOK_SECRET) {
+  process.env.GITHUB_WEBHOOK_SECRET = "prbot-secret-2024";
+}
+
 const TEST_PORT = 3105;
 const TEST_BASE_URL = `http://localhost:${TEST_PORT}`;
-const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "prbot-dashboard-pass-2024";
-const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "prbot-secret-2024";
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD;
+const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
 let testServer: Server;
 
