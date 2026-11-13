@@ -4,8 +4,11 @@ import { requireDashboardAuth } from "./auth";
 
 export const dashboardRouter = Router();
 
-// Enforce authentication across all dashboard and telemetry endpoints
-dashboardRouter.use(requireDashboardAuth);
+// Public portfolio access: Dashboard and telemetry are open by default without login prompts.
+// Optional authentication can be enabled by setting ENABLE_DASHBOARD_AUTH="true" in .env.
+if (process.env.ENABLE_DASHBOARD_AUTH === "true") {
+  dashboardRouter.use(requireDashboardAuth);
+}
 
 // JSON API: stats
 dashboardRouter.get("/api/stats", async (_req, res) => {

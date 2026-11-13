@@ -62,59 +62,40 @@ async function runTestSuite() {
 
   try {
     // --------------------------------------------------------------------------
-    // 1. Dashboard Authentication Tests
+    // 1. Dashboard & Telemetry API Tests (Public Portfolio Mode)
     // --------------------------------------------------------------------------
-    console.log("--- Group 1: Dashboard Authentication ---");
+    console.log("--- Group 1: Dashboard & Telemetry Access ---");
 
-    await test("Unauthenticated request to /dashboard returns HTTP 401 with Basic Auth challenge", async () => {
+    await test("Public request to /dashboard returns HTTP 200 without login prompts", async () => {
       const res = await fetch(`${TEST_BASE_URL}/dashboard`);
-      assert.strictEqual(res.status, 401);
-      const authHeader = res.headers.get("www-authenticate");
-      assert.ok(authHeader && authHeader.includes("Basic"));
-    });
-
-    await test("Unauthenticated request to /api/stats returns HTTP 401 JSON", async () => {
-      const res = await fetch(`${TEST_BASE_URL}/api/stats`);
-      assert.strictEqual(res.status, 401);
-      const data = (await res.json()) as any;
-      assert.strictEqual(data.error, "Unauthorized");
-    });
-
-    await test("Invalid Basic Auth credentials returns HTTP 401", async () => {
-      const badCreds = Buffer.from("admin:wrong-password").toString("base64");
-      const res = await fetch(`${TEST_BASE_URL}/api/stats`, {
-        headers: { Authorization: `Basic ${badCreds}` },
-      });
-      assert.strictEqual(res.status, 401);
-    });
-
-    await test("Invalid Bearer token returns HTTP 401", async () => {
-      const res = await fetch(`${TEST_BASE_URL}/api/stats`, {
-        headers: { Authorization: "Bearer bad-token-123" },
-      });
-      assert.strictEqual(res.status, 401);
-    });
-
-    await test("Authenticated request with valid Bearer token returns HTTP 200", async () => {
-      const res = await fetch(`${TEST_BASE_URL}/api/stats`, {
-        headers: { Authorization: `Bearer ${DASHBOARD_PASSWORD}` },
-      });
-      assert.strictEqual(res.status, 200);
-      const stats = (await res.json()) as any;
-      assert.ok(typeof stats.totalReviews === "number");
-    });
-
-    await test("Authenticated request with valid Basic Auth returns HTTP 200", async () => {
-      const validCreds = Buffer.from(`admin:${DASHBOARD_PASSWORD}`).toString("base64");
-      const res = await fetch(`${TEST_BASE_URL}/dashboard`, {
-        headers: { Authorization: `Basic ${validCreds}` },
-      });
       assert.strictEqual(res.status, 200);
       const html = await res.text();
       assert.ok(html.includes("ReviewPulse"));
     });
 
-    await test("Timing-safe credential comparison works correctly and rejects unequal lengths", async () => {
+    await test("Public request to /api/stats returns HTTP 200 JSON metrics", async () => {
+      const res = await fetch(`${TEST_BASE_URL}/api/stats`);
+      assert.strictEqual(res.status, 200);
+      const stats = (await res.json()) as any;
+      assert.ok(typeof stats.totalReviews === "number");
+    });
+
+    await test("Public request to /api/reviews returns HTTP 200 JSON review history", async () => {
+      const res = await fetch(`${TEST_BASE_URL}/api/reviews`);
+      assert.strictEqual(res.status, 200);
+      const reviews = (await res.json()) as any;
+      assert.ok(Array.isArray(reviews));
+    });
+
+    await test("API endpoint /api/reviews?repo=... filters results by repository", async () => {
+      const res = await fetch(`${TEST_BASE_URL}/api/reviews?repo=nonexistent-org/test`);
+      assert.strictEqual(res.status, 200);
+      const reviews = (await res.json()) as any;
+      assert.ok(Array.isArray(reviews));
+      assert.strictEqual(reviews.length, 0);
+    });
+
+    await test("Timing-safe credential comparison utility works correctly and rejects unequal lengths", async () => {
       assert.strictEqual(timingSafeCompare("secret123", "secret123"), true);
       assert.strictEqual(timingSafeCompare("secret123", "secret124"), false);
       assert.strictEqual(timingSafeCompare("short", "much-longer-string"), false);
