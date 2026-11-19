@@ -1,8 +1,8 @@
 # ReviewPulse — AI GitHub PR Reviewer Bot
 
-[![Live Deployment](https://img.shields.io/badge/Railway-Live_24%2F7-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app)
+[![Live Deployment](https://img.shields.io/badge/Railway-Live_24%2F7-0B0D0E?style=flat-square&logo=railway)](https://pr-reviewer-bot-production-6dc7eae2.up.railway.app)
 [![Live Demo PR](https://img.shields.io/badge/Live_Demo_PR-%231_Reviewed-blue?style=flat-square&logo=github)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1)
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Open_Access-brightgreen?style=flat-square&logo=chartdotjs)](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Open_Access-brightgreen?style=flat-square&logo=chartdotjs)](https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/dashboard)
 [![CI Pipeline](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?style=flat-square)](https://nodejs.org/)
@@ -21,10 +21,10 @@ The application is deployed 24/7 on Railway and integrated directly with GitHub:
 | Service | Live Production URL | Description |
 | :--- | :--- | :--- |
 | **Live GitHub PR Demo** | [Pull Request #1 (Reviewed)](https://github.com/sankalp-mishra2005/PR-Reviewer-Bot/pull/1) | Real-world Pull Request showcasing 4 line-by-line inline review comments posted by Gemini 3.5 Flash. |
-| **Telemetry Dashboard** | [pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard) | Open portfolio access: Real-time telemetry, latency trends, multi-repo switcher, and code inspection drawer. |
-| **Live Webhook Gateway** | `https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/webhook` | Production GitHub App webhook receiver with timing-safe HMAC SHA-256 validation. |
-| **Public Stats API** | [`/api/stats`](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/api/stats) | JSON metrics: total evaluated PRs, issue distribution, pass rate, and average latency. |
-| **Public Reviews API** | [`/api/reviews`](https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/api/reviews) | JSON audit trail of recent reviews with optional repository filter (`?repo=...`). |
+| **Telemetry Dashboard** | [pr-reviewer-bot-production-6dc7eae2.up.railway.app/dashboard](https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/dashboard) | Open portfolio access: Real-time telemetry, latency trends, multi-repo switcher, and code inspection drawer. |
+| **Live Webhook Gateway** | `https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/webhook` | Production GitHub App webhook receiver with timing-safe HMAC SHA-256 validation. |
+| **Public Stats API** | [`/api/stats`](https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/api/stats) | JSON metrics: total evaluated PRs, issue distribution, pass rate, and average latency. |
+| **Public Reviews API** | [`/api/reviews`](https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/api/reviews) | JSON audit trail of recent reviews with optional repository filter (`?repo=...`). |
 
 ---
 
@@ -112,7 +112,7 @@ To prevent duplicate reviews and wasted LLM token spend when GitHub re-delivers 
 
 ## 📊 Live Observability & Telemetry Console
 
-The production service includes an open developer dashboard at `https://pr-reviewer-bot-production-4f4f8b9a.up.railway.app/dashboard`:
+The production service includes an open developer dashboard at `https://pr-reviewer-bot-production-6dc7eae2.up.railway.app/dashboard`:
 
 - **Open Portfolio Access**: Frictionless, immediate access without login challenges so engineering leads and recruiters can test the live application.
 - **Dynamic Multi-Repository Switcher**: Dropdown selector allowing users to inspect metrics across all repositories or filter specifically by connected repo.
