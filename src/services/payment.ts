@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 /**
  * Payment processing route handler.
- * Evaluated by ReviewPulse AI Agent on Railway.
+ * Evaluated by ReviewPulse AI Agent on Railway (production live test).
  */
 export async function processPayment(req: Request, res: Response) {
   const { userId, amount, currency, sourceToken } = req.body;
